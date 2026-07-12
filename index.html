@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Aufgaben-Generator | Quadratische Gleichungen</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+  @media print {
+    .no-print { display: none !important; }
+    .print-page-break { page-break-before: always; }
+    body { background: white !important; }
+    .task-card { break-inside: avoid; }
+  }
+  body { font-family: 'Georgia', 'Times New Roman', serif; }
+  .ui-font { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+</style>
+</head>
+<body class="bg-slate-50 text-slate-900">
+
+<!-- HEADER / STEUERUNG -->
+<div class="no-print border-b border-slate-200 bg-white sticky top-0 z-10">
+  <div class="max-w-5xl mx-auto px-6 py-5">
+    <div class="flex items-center justify-between mb-5">
+      <div>
+        <h1 class="ui-font text-xl font-semibold text-slate-900">Nullstellen-Generator</h1>
+        <p class="ui-font text-sm text-slate-500">Quadratische Gleichungen — automatisch erzeugt, ganzzahlig lösbar</p>
+      </div>
+      <div class="flex gap-2">
+        <button id="btnGenerate" class="ui-font bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium px-4 py-2 rounded-md transition">Aufgaben generieren</button>
+        <button id="btnPrint" class="ui-font bg-white hover:bg-slate-100 text-slate-700 text-sm font-medium px-4 py-2 rounded-md border border-slate-300 transition">Druckansicht</button>
+      </div>
+    </div>
+
+    <div class="flex flex-wrap items-end gap-8 ui-font">
+      <div>
+        <label class="block text-xs font-medium text-slate-500 mb-1">Anzahl der Aufgaben</label>
+        <select id="taskCount" class="border border-slate-300 rounded-md px-3 py-1.5 text-sm">
+          <option value="5">5</option>
+          <option value="10" selected>10</option>
+          <option value="15">15</option>
+        </select>
+      </div>
+
+      <div>
+        <label class="block text-xs font-medium text-slate-500 mb-2">Lösungsverfahren-Fokus</label>
+        <div class="flex flex-wrap gap-4 text-sm text-slate-700">
+          <label class="flex items-center gap-1.5"><input type="checkbox" class="focusType" value="pq" checked> pq-Formel (a = 1)</label>
+          <label class="flex items-center gap-1.5"><input type="checkbox" class="focusType" value="ausklammern" checked> Ausklammern (c = 0)</label>
+          <label class="flex items-center gap-1.5"><input type="checkbox" class="focusType" value="wurzel" checked> Wurzelziehen (b = 0)</label>
+          <label class="flex items-center gap-1.5"><input type="checkbox" class="focusType" value="allgemein"> Allgemein (a ≠ 1)</label>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- AUSGABE -->
+<div class="max-w-5xl mx-auto px-6 py-10">
+
+  <div id="taskSection">
+    <h2 class="text-2xl font-semibold mb-1">Nullstellen berechnen</h2>
+    <p class="text-sm text-slate-500 mb-6 ui-font">Bestimmen Sie jeweils die Nullstellen der folgenden quadratischen Gleichungen.</p>
+    <ol id="taskList" class="space-y-4 list-decimal list-inside"></ol>
+  </div>
+
+  <div id="solutionSection" class="print-page-break mt-16">
+    <div class="border-t-2 border-slate-800 pt-6 mb-6">
+      <h2 class="text-2xl font-semibold mb-1">Erwartungshorizont</h2>
+      <p class="text-sm text-slate-500 ui-font">Vollständiger Lösungsweg für die Lehrkraft.</p>
+    </div>
+    <ol id="solutionList" class="space-y-8 list-decimal list-inside"></ol>
+  </div>
+
+</div>
+
+<script>
+function randInt(min, max) {
+  return Math.floor(Math.random() * (max - min + 1)) + min;
+}
+
+function fmtNum(n) {
+  if (Number.isInteger(n)) return n.toString();
+  return n.toFixed(2).replace(/\.?0+$/, '');
+}
+
+// Formatiert einen Term-Teil "+ 3x" / "- 3x" etc. Gibt "" zurück wenn coeff 0.
+function termStr(coeff, variable, isFirst) {
+  if (coeff === 0) return '';
+  const abs = Math.abs(coeff);
+  const coeffStr = (abs === 1 && variable !== '') ? '' : fmtNum(abs);
+  const sign = coeff < 0 ? '-' : '+';
+  const body = coeffStr + variable;
+  if (isFirst) {
+    return (coeff < 0 ? '-' : '') + (coeffStr === '' ? variable : coeffStr + variable);
+  }
+  return ' ' + sign + ' ' + body;
+}
+
+function buildEquation(a, b, c) {
+  let s = '';
+  s += termStr(a, 'x²', true);
+  s += termStr(b, 'x', s === '');
+  s += termStr(c, '', s === '');
+  if (s === '') s = '0';
+  return s + ' = 0';
+}
+
+// Generiert eine Aufgabe für den gewählten Typ
+function generateTask(type) {
+  let x1, x2, a;
+
+  if (type === 'ausklammern') {
+    x1 = 0;
+    do { x2 = randInt(-10, 10); } while (x2 === 0);
+  } else if (type === 'wurzel') {
+    do { x2 = randInt(-10, 10); } while (x2 === 0);
+    x1 = -x2;
+  } else {
+    do { x1 = randInt(-10, 10); x2 = randInt(-10, 10); } while (x1 === x2);
+  }
+
+  if (type === 'pq' || type === 'ausklammern' || type === 'wurzel') {
+    a = 1;
+  } else {
+    const pool = [2, -2, 3, -3, 0.5, -0.5];
+    a = pool[randInt(0, pool.length - 1)];
+  }
+
+  const b = -a * (x1 + x2);
+  const c = a * x1 * x2;
+
+  return { type, a, b, c, x1, x2 };
+}
+
+function typeLabel(type) {
+  return { pq: 'pq-Formel', ausklammern: 'Ausklammern', wurzel: 'Wurzelziehen', allgemein: 'Allgemein' }[type];
+}
+
+function buildSolutionSteps(task) {
+  const { type, a, b, c, x1, x2 } = task;
+  const steps = [];
+
+  if (type === 'ausklammern') {
+    steps.push(`Gleichung: ${buildEquation(a, b, c)}`);
+    steps.push(`x ausklammern: x · (${buildEquation(a, b, 0).replace(' = 0', '').replace(/^x/, '').trim() ? termStr(a,'x',true).trim()+termStr(b,'',false).trim() : ''}) = 0`);
+    const innerA = a === 1 ? 'x' : fmtNum(a) + 'x';
+    const innerB = b === 0 ? '' : (b > 0 ? ' + ' + fmtNum(b) : ' - ' + fmtNum(Math.abs(b)));
+    steps[1] = `Ausklammern von x: x · (${innerA}${innerB}) = 0`;
+    steps.push(`Satz vom Nullprodukt: x = 0  oder  ${innerA}${innerB} = 0`);
+    steps.push(`Zweite Gleichung lösen: x = ${fmtNum(x2)}`);
+    steps.push(`Lösungen: x₁ = ${fmtNum(x1)}   x₂ = ${fmtNum(x2)}`);
+  } else if (type === 'wurzel') {
+    steps.push(`Gleichung: ${buildEquation(a, b, c)}`);
+    steps.push(`Nach x² umstellen: x² = ${fmtNum(-c / a)}`);
+    steps.push(`Wurzelziehen (beide Vorzeichen): x = ±√${fmtNum(-c / a)}`);
+    steps.push(`Lösungen: x₁ = ${fmtNum(x1)}   x₂ = ${fmtNum(x2)}`);
+  } else if (type === 'pq') {
+    const p = b, q = c;
+    const disc = (p / 2) * (p / 2) - q;
+    steps.push(`Gleichung (bereits in Normalform): ${buildEquation(1, p, q)}`);
+    steps.push(`p = ${fmtNum(p)},  q = ${fmtNum(q)}`);
+    steps.push(`pq-Formel: x₁,₂ = −p/2 ± √((p/2)² − q)`);
+    steps.push(`Diskriminante: (p/2)² − q = ${fmtNum(disc)}`);
+    steps.push(`x₁,₂ = ${fmtNum(-p/2)} ± √${fmtNum(disc)} = ${fmtNum(-p/2)} ± ${fmtNum(Math.sqrt(disc))}`);
+    steps.push(`Lösungen: x₁ = ${fmtNum(x1)}   x₂ = ${fmtNum(x2)}`);
+  } else {
+    // allgemein
+    steps.push(`Gleichung: ${buildEquation(a, b, c)}`);
+    steps.push(`Durch a = ${fmtNum(a)} teilen (Normalform herstellen): ${buildEquation(1, b/a, c/a)}`);
+    const p = b / a, q = c / a;
+    const disc = (p / 2) * (p / 2) - q;
+    steps.push(`p = ${fmtNum(p)},  q = ${fmtNum(q)}`);
+    steps.push(`pq-Formel: x₁,₂ = −p/2 ± √((p/2)² − q)`);
+    steps.push(`Diskriminante: (p/2)² − q = ${fmtNum(disc)}`);
+    steps.push(`x₁,₂ = ${fmtNum(-p/2)} ± √${fmtNum(disc)} = ${fmtNum(-p/2)} ± ${fmtNum(Math.sqrt(disc))}`);
+    steps.push(`Lösungen: x₁ = ${fmtNum(x1)}   x₂ = ${fmtNum(x2)}`);
+  }
+
+  return steps;
+}
+
+function generate() {
+  const count = parseInt(document.getElementById('taskCount').value, 10);
+  const selectedTypes = Array.from(document.querySelectorAll('.focusType:checked')).map(cb => cb.value);
+
+  const types = selectedTypes.length > 0 ? selectedTypes : ['pq'];
+
+  const tasks = [];
+  for (let i = 0; i < count; i++) {
+    const type = types[randInt(0, types.length - 1)];
+    tasks.push(generateTask(type));
+  }
+
+  const taskList = document.getElementById('taskList');
+  const solutionList = document.getElementById('solutionList');
+  taskList.innerHTML = '';
+  solutionList.innerHTML = '';
+
+  tasks.forEach((t, idx) => {
+    const eq = buildEquation(t.a, t.b, t.c);
+
+    const li = document.createElement('li');
+    li.className = 'task-card text-lg pl-2';
+    li.innerHTML = `<span class="text-xl">${eq}</span>`;
+    taskList.appendChild(li);
+
+    const steps = buildSolutionSteps(t);
+    const sol = document.createElement('li');
+    sol.className = 'task-card pl-2';
+    sol.innerHTML = `
+      <div class="text-lg font-medium mb-2">${eq}
+        <span class="ui-font text-xs text-slate-400 font-normal ml-2">(${typeLabel(t.type)})</span>
+      </div>
+      <ul class="ui-font text-sm text-slate-700 space-y-1 pl-4 border-l-2 border-blue-100">
+        ${steps.map(s => `<li>${s}</li>`).join('')}
+      </ul>`;
+    solutionList.appendChild(sol);
+  });
+}
+
+document.getElementById('btnGenerate').addEventListener('click', generate);
+document.getElementById('btnPrint').addEventListener('click', () => window.print());
+
+generate();
+</script>
+</body>
+</html>
