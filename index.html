@@ -39,8 +39,7 @@
     border:1px solid var(--panel-brd);border-radius:16px;padding:16px 20px;margin:22px 0 30px;max-width:640px;width:100%;}
   .legend-item{display:flex;align-items:baseline;gap:8px;font-size:.85rem;line-height:1.35;color:var(--ink-soft);}
   .legend-num{font-family:'IBM Plex Mono',monospace;font-weight:700;font-size:.85rem;flex-shrink:0;}
-  .legend-item:nth-child(1) .legend-num{color:var(--m1);} .legend-item:nth-child(2) .legend-num{color:var(--m2);}
-  .legend-item:nth-child(3) .legend-num{color:var(--m3);} .legend-item:nth-child(4) .legend-num{color:var(--m4);}
+
 
   .stage{z-index:1;display:flex;flex-direction:column;align-items:center;width:100%;position:relative;}
   .scene{perspective:1600px;width:100%;max-width:520px;height:400px;}
@@ -138,7 +137,7 @@
     <span class="school-name">campus vest · <b>herwig blankertz berufskolleg</b></span>
   </div>
   <h1>Nullstellen quadratischer Funktionen</h1>
-  <p class="subtitle">Wählen Sie für jede Funktionsgleichung die passende Methode zur Nullstellenberechnung.</p>
+  <p class="subtitle">Wählen Sie für jede Funktionsgleichung die passende Methode: Ausklammern oder PQ-Formel.</p>
 </header>
 
 <div class="toolbar">
@@ -146,8 +145,6 @@
   <button class="btn-ghost" id="newSetBtn">🔄 16 neue Aufgaben</button>
   <button class="btn-ghost" id="printBtn">🖨 Druckversion</button>
 </div>
-
-<div class="legend" id="legend"></div>
 
 <div class="segbar-label" id="progressText">Karte 1/16</div>
 <div class="segbar" id="segbar"></div>
@@ -197,7 +194,7 @@
   </div>
 </div>
 
-<footer>Herwig-Blankertz-Berufskolleg · FOS Mathematik · Leertaste: Vorschau · Pfeiltasten: Blättern · 1–4: Antwort wählen</footer>
+<footer>Herwig-Blankertz-Berufskolleg · FOS Mathematik · Leertaste: Vorschau · Pfeiltasten: Blättern · 1–2: Antwort wählen</footer>
 
 <div class="print-only" id="printArea"></div>
 
@@ -240,104 +237,82 @@ function sqTermTex(h){ return h===0 ? 'x' : (h>0 ? `(x-${fmtNum(h)})` : `(x+${fm
 
 /* ---------- Methoden-Generatoren ---------- */
 const methodMeta = {
-  1:{name:"Methode 1 · Umformen &amp; Wurzel ziehen", color:"#0891B2", short:"1 · Umformen/Wurzel"},
-  2:{name:"Methode 2 · Ausklammern &amp; Nullprodukt", color:"#6366F1", short:"2 · Ausklammern"},
-  3:{name:"Methode 3 · Produktform (ablesen)", color:"#B45309", short:"3 · Produktform - NST ablesen"},
-  4:{name:"Methode 4 · pq-Formel", color:"#DB2777", short:"4 · pq-Formel"}
+  1:{name:"x ausklammern, Satz vom Nullprodukt", color:"#6366F1", short:"1 · Ausklammern"},
+  2:{name:"PQ-Formel", color:"#DB2777", short:"2 · PQ-Formel"}
 };
-const legendData = [
-  {n:1,t:"Einfaches Umformen und Wurzel ziehen"},
-  {n:2,t:"Ausklammern und Satz vom Nullprodukt"},
-  {n:3,t:"Liegt in Produktform vor – Nullstellen ablesen"},
-  {n:4,t:"pq-Formel"}
-];
 
-function finalizeMethod1(a,h,e,k){
-  const tx = `${leadTex(a)}${sqTermTex(h)}^2 - ${fracTex(e)}`;
-  return { f:tx, m:1,
-    r: h===0 ? `Kein x-Term (b = 0). Nach x² umstellen und Wurzel ziehen.`
-             : `Bereits in der Scheitelpunktform gegeben. Nach dem quadrierten Term in der Klammer umstellen und Wurzel ziehen.`,
-    extra:{a,h,e}, roots:[round2(h-k), round2(h+k)] };
-}
-function genMethod1(useFraction){
-  const a = randChoice([1,1,1,2,3]);
-  if(useFraction){ const h = randNonZero(-6,6); return finalizeMethod1(a,h,0.25,0.5); }
-  if(Math.random()<0.5){ const k=randInt(1,6); return finalizeMethod1(a,0,a*k*k,k); }
-  const h = randNonZero(-6,6); const k = randInt(1,5);
-  return finalizeMethod1(a,h,a*k*k,k);
-}
-
-function finalizeMethod2(a,b){
+function finalizeAusklammern(a,b){
   const tx = `${leadTex(a)}x^2${termTex(b,'x')}`;
-  return { f:tx, m:2, r:`Kein konstantes Glied (c = 0). x ausklammern, dann Satz vom Nullprodukt anwenden.`,
+  return { f:tx, m:1, r:`Kein konstantes Glied (c = 0). x ausklammern, dann Satz vom Nullprodukt anwenden.`,
     extra:{a,b}, roots:[0, round2(-b/a)] };
 }
-function genMethod2(){ const a=randChoice([1,1,1,2,3,-1]); const m2=randNonZero(-9,9); return finalizeMethod2(a,a*m2); }
+function genAusklammern(){ const a=randChoice([1,1,1,2,3,-1]); const m=randNonZero(-9,9); return finalizeAusklammern(a,a*m); }
 
-function finalizeMethod3(a,r1,r2){
-  const tx = `${leadTex(a)}(${factorTex(r1)})(${factorTex(r2)})`;
-  return { f:tx, m:3, r:`Bereits in Produktform gegeben. Nullstellen können leicht abgelesen werden.`,
-    extra:{a,r1,r2}, roots:[r1,r2] };
-}
-function genMethod3(){
-  const a = randChoice([1,1,1,2,-1]);
-  let r1 = randNonZero(-6,6); let r2 = randNonZero(-6,6);
-  while(r2===r1) r2 = randNonZero(-6,6);
-  return finalizeMethod3(a,r1,r2);
-}
-
-function finalizeMethod4(a,b,c,roots){
+function finalizePQ(a,b,c,roots){
   const p = round2(b/a), q = round2(c/a);
   const tx = `${leadTex(a)}x^2${termTex(b,'x')}${termTex(c,'')}`;
   const r = a===1
-    ? `Vollständige Gleichung ohne erkennbare Faktorzerlegung. pq-Formel anwenden (p = ${fmtNum(p)}, q = ${fmtNum(q)}).`
-    : `Vollständige Gleichung mit führendem Koeffizienten a ≠ 1. Erst durch ${a} dividieren (normieren), anschließend pq-Formel anwenden (p = ${fmtNum(p)}, q = ${fmtNum(q)}).`;
-  return { f:tx, m:4, r, extra:{a,b,c}, roots: roots.map(round2) };
+    ? `Vollständige Gleichung ohne erkennbare Faktorzerlegung. PQ-Formel anwenden (p = ${fmtNum(p)}, q = ${fmtNum(q)}).`
+    : `Vollständige Gleichung mit führendem Koeffizienten a ≠ 1. Erst durch ${a} dividieren (normieren), anschließend PQ-Formel anwenden (p = ${fmtNum(p)}, q = ${fmtNum(q)}).`;
+  return { f:tx, m:2, r, extra:{a,b,c}, roots: roots.map(round2) };
 }
-function genMethod4(useFraction){
-  if(useFraction){
+function genPQ(){
+  const a = randChoice([1,1,1,2,3]);
+  const roll = Math.random();
+
+  if(roll < 0.2){
+    // Diskriminante < 0 -> keine Nullstelle
+    let p = randInt(-8,8); if(p%2!==0) p += (p>0?-1:1);
+    const half = p/2, extra = randInt(1,5), q = half*half + extra;
+    return finalizePQ(a, a*p, a*q, []);
+  }
+  if(roll < 0.4){
+    // Diskriminante = 0 -> genau eine (doppelte) Nullstelle
+    const r = randNonZero(-6,6);
+    const p = -2*r, q = r*r;
+    return finalizePQ(a, a*p, a*q, [r]);
+  }
+  if(roll < 0.55){
+    // Diskriminante > 0 mit Brüchen -> zwei Nullstellen
     const table = [
       {p:-2,q:0.75,roots:[0.5,1.5]}, {p:1,q:-0.75,roots:[0.5,-1.5]},
       {p:-1,q:-0.75,roots:[-0.5,1.5]}, {p:2,q:0.75,roots:[-0.5,-1.5]}
     ];
     const t = randChoice(table);
-    return finalizeMethod4(1, t.p, t.q, t.roots);
+    return finalizePQ(1, t.p, t.q, t.roots);
   }
+  // Diskriminante > 0 -> zwei Nullstellen
   let r1 = randNonZero(-8,8); let r2 = randNonZero(-8,8);
   while(r2===r1) r2 = randNonZero(-8,8);
   const p = -(r1+r2), q = r1*r2;
-  const a = randChoice([1,1,2,3]);
-  return finalizeMethod4(a, a*p, a*q, [r1,r2]);
+  return finalizePQ(a, a*p, a*q, [r1,r2]);
 }
 
 /* ---------- Statischer Grundsatz (kuratiert) ---------- */
 function buildStaticCards(){
   return [
-    finalizeMethod1(1,0,9,3),
-    finalizeMethod3(1,3,-2),
-    finalizeMethod2(1,-5),
-    finalizeMethod4(1,-6,5,[1,5]),
-    finalizeMethod3(1,1,5),
-    finalizeMethod1(2,0,8,2),
-    finalizeMethod4(1,4,-12,[-6,2]),
-    finalizeMethod2(2,6),
-    finalizeMethod1(3,1,12,2),
-    finalizeMethod3(2,-4,2),
-    finalizeMethod4(2,-4,-16,[4,-2]),
-    finalizeMethod2(-1,4),
-    finalizeMethod1(1,-2,0.25,0.5),
-    finalizeMethod3(-1,6,-1),
-    finalizeMethod4(1,1,-0.75,[0.5,-1.5]),
-    finalizeMethod2(3,-6)
+    finalizeAusklammern(1,-5),
+    finalizePQ(1,-6,5,[1,5]),
+    finalizeAusklammern(2,6),
+    finalizePQ(1,4,-12,[-6,2]),
+    finalizeAusklammern(-1,4),
+    finalizePQ(1,-4,4,[2]),
+    finalizeAusklammern(3,-6),
+    finalizePQ(1,2,5,[]),
+    finalizeAusklammern(1,7),
+    finalizePQ(2,-4,-16,[4,-2]),
+    finalizeAusklammern(2,-8),
+    finalizePQ(2,-8,8,[2]),
+    finalizeAusklammern(-1,-3),
+    finalizePQ(1,0,4,[]),
+    finalizeAusklammern(3,9),
+    finalizePQ(1,1,-0.75,[0.5,-1.5])
   ];
 }
 function generateRandomSet(){
-  const fr1 = randInt(0,3), fr4 = randInt(0,3);
   const all = [
-    ...[0,1,2,3].map(i=>genMethod1(i===fr1)),
-    ...[0,1,2,3].map(()=>genMethod2()),
-    ...[0,1,2,3].map(()=>genMethod3()),
-    ...[0,1,2,3].map(i=>genMethod4(i===fr4))
+    ...Array(8).fill(0).map(()=>genAusklammern()),
+    ...Array(8).fill(0).map(()=>genPQ())
   ];
   for(let i=all.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [all[i],all[j]]=[all[j],all[i]]; }
   return all;
@@ -349,9 +324,7 @@ cards.forEach(c=>{ c.status=null; c.chosen=null; });
 /* ---------- Standardform & Graph ---------- */
 function stdCoeffs(card){
   const ex = card.extra;
-  if(card.m===1) return {a:ex.a, b:-2*ex.a*ex.h, c:ex.a*ex.h*ex.h - ex.e};
-  if(card.m===2) return {a:ex.a, b:ex.b, c:0};
-  if(card.m===3) return {a:ex.a, b:-ex.a*(ex.r1+ex.r2), c:ex.a*ex.r1*ex.r2};
+  if(card.m===1) return {a:ex.a, b:ex.b, c:0};
   return {a:ex.a, b:ex.b, c:ex.c};
 }
 function buildGraphSVG(card){
@@ -389,24 +362,6 @@ function buildStepsHTML(card){
   let html = '';
 
   if(card.m === 1){
-    const {a,h,e} = ex;
-    const k = Math.sqrt(e/a);
-    const sq = sqTermTex(h);
-    html += stepRow(`f(x) = ${leadTex(a)}${sq}^2 - ${fracTex(e)}`);
-    html += stepRow(`f(x) = 0`);
-    html += stepRow(`${leadTex(a)}${sq}^2 - ${fracTex(e)} = 0`, `+ ${fracPlain(e)}`);
-    if(a !== 1){
-      html += stepRow(`${leadTex(a)}${sq}^2 = ${fracTex(e)}`, `: ${a}`);
-      html += stepRow(`${sq}^2 = ${fracTex(round2(e/a))}`, `± √`);
-    } else {
-      html += stepRow(`${sq}^2 = ${fracTex(e)}`, `± √`);
-    }
-    html += stepRow(`${h===0?'x':'x '+(h>0?'-':'+')+' '+fmtNum(Math.abs(h))} = \\pm ${fracTex(k)}`);
-    html += stepRow(`x_1 = ${fmtNum(h-k)} \\quad \\text{oder} \\quad x_2 = ${fmtNum(h+k)}`);
-    return html;
-  }
-
-  if(card.m === 2){
     const {a,b} = ex;
     const aStr = leadTex(a);
     html += stepRow(`f(x) = ${aStr}x^2${termTex(b,'x')}`);
@@ -425,16 +380,7 @@ function buildStepsHTML(card){
     return html;
   }
 
-  if(card.m === 3){
-    const {a,r1,r2} = ex;
-    html += stepRow(`f(x) = ${leadTex(a)}(${factorTex(r1)})(${factorTex(r2)})`);
-    html += stepRow(`f(x) = 0`);
-    html += stepRow(`${leadTex(a)}(${factorTex(r1)})(${factorTex(r2)}) = 0`, `Satz vom Nullprodukt`);
-    html += stepRow(`x_1 = ${fmtNum(r1)} \\quad \\text{oder} \\quad x_2 = ${fmtNum(r2)}`);
-    return html;
-  }
-
-  // Methode 4: pq-Formel (ggf. mit Normierung)
+  // Methode 2: PQ-Formel (ggf. mit Normierung)
   const {a,b,c} = ex;
   const p = round2(b/a), q = round2(c/a);
   const half = round2(p/2);
@@ -477,13 +423,12 @@ const TIMER_MS = 15000;
 const cardEl=document.getElementById('card'), funcText=document.getElementById('funcText'),
   methodTag=document.getElementById('methodTag'), reasonText=document.getElementById('reasonText'),
   feedbackLine=document.getElementById('feedbackLine'), chosenNote=document.getElementById('chosenNote'),
-  progressText=document.getElementById('progressText'), legendEl=document.getElementById('legend'),
+  progressText=document.getElementById('progressText'),
   choiceGrid=document.getElementById('choiceGrid'),
   summaryEl=document.getElementById('summary'), timerBar=document.getElementById('timerBar'),
   timerFill=document.getElementById('timerFill'), graphBox=document.getElementById('graphBox'),
   stepsBox=document.getElementById('stepsBox'), segbarEl=document.getElementById('segbar');
 
-function renderLegend(){ legendEl.innerHTML = legendData.map(l=>`<div class="legend-item"><span class="legend-num">${l.n}</span><span>${l.t}</span></div>`).join(''); }
 function buildChoiceButtons(){
   choiceGrid.innerHTML = Object.keys(methodMeta).map(k=>`<button class="choice-btn" data-m="${k}">${methodMeta[k].short}</button>`).join('');
   choiceGrid.querySelectorAll('.choice-btn').forEach(btn=>btn.addEventListener('click', ()=>selectAnswer(Number(btn.dataset.m))));
@@ -606,7 +551,7 @@ document.getElementById('newSetBtn').addEventListener('click', ()=>{
 
 document.addEventListener('keydown', (e)=>{
   if(summaryEl.classList.contains('show')) return;
-  if(['1','2','3','4'].includes(e.key)) selectAnswer(Number(e.key));
+  if(['1','2'].includes(e.key)) selectAnswer(Number(e.key));
   else if(e.key==='ArrowRight') document.getElementById('nextBtn').click();
   else if(e.key==='ArrowLeft') document.getElementById('prevBtn').click();
   else if(e.key===' '){ e.preventDefault(); cardEl.classList.toggle('flipped'); }
@@ -621,7 +566,7 @@ document.getElementById('printBtn').addEventListener('click', ()=>{
   window.print();
 });
 
-renderLegend(); buildChoiceButtons(); renderCard();
+buildChoiceButtons(); renderCard();
 </script>
 
 </body>
