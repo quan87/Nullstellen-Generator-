@@ -3,226 +3,626 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Aufgaben-Generator | Quadratische Gleichungen</title>
-<script src="https://cdn.tailwindcss.com"></script>
+<title>Lernkarten · Nullstellenmethoden</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
 <style>
-  @media print {
-    .no-print { display: none !important; }
-    .print-page-break { page-break-before: always; }
-    body { background: white !important; }
-    .task-card { break-inside: avoid; }
+  :root{
+    --cyan:#22D3EE; --cyan-deep:#0EA5C4; --cyan-ink:#04222B;
+    --bg0:#0E1424; --bg1:#151C31; --panel:rgba(255,255,255,.05); --panel-brd:rgba(255,255,255,.10);
+    --ink:#F0F4F8; --ink-soft:#C4CBD6; --ink-mute:#7E889C;
+    --ok:#34D399; --bad:#FB7185;
+    --m1:#22D3EE; --m2:#818CF8; --m3:#FBBF24; --m4:#F472B6;
   }
-  body { font-family: 'Georgia', 'Times New Roman', serif; }
-  .ui-font { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+  *{box-sizing:border-box;}
+  body{margin:0;min-height:100vh;background:radial-gradient(circle at 12% 8%,rgba(129,140,248,.14),transparent 50%),radial-gradient(circle at 88% 92%,rgba(34,211,238,.12),transparent 50%),linear-gradient(160deg,#0E1424,#151C31);
+    font-family:'Plus Jakarta Sans',sans-serif;color:var(--ink);
+    display:flex;flex-direction:column;align-items:center;padding:32px 16px 60px;position:relative;overflow-x:hidden;}
+
+  header{text-align:center;z-index:1;margin-bottom:8px;}
+  .logo-row{display:flex;align-items:center;justify-content:center;margin-bottom:14px;}
+  .school-name{font-family:'IBM Plex Mono',monospace;font-weight:500;font-size:.72rem;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-mute);}
+  .school-name b{color:var(--cyan);font-weight:600;}
+  h1{font-weight:800;font-size:1.7rem;margin:0 0 4px;letter-spacing:-.01em;}
+  .subtitle{font-size:.95rem;color:var(--ink-soft);max-width:520px;margin:0 auto;}
+
+  .toolbar{z-index:1;display:flex;align-items:center;gap:14px;flex-wrap:wrap;justify-content:center;margin:20px 0 0;font-size:.85rem;}
+  .toolbar label{display:flex;align-items:center;gap:7px;cursor:pointer;color:var(--ink-soft);}
+  .toolbar input[type=checkbox]{accent-color:var(--cyan);width:16px;height:16px;}
+  .btn-ghost{background:var(--panel);border:1px solid var(--panel-brd);color:var(--ink);font-family:inherit;
+    font-weight:600;font-size:.83rem;border-radius:99px;padding:9px 16px;cursor:pointer;transition:background .15s ease;}
+  .btn-ghost:hover{background:rgba(255,255,255,.10);}
+
+  .legend{z-index:1;display:grid;grid-template-columns:repeat(2,minmax(220px,1fr));gap:8px 20px;background:var(--panel);
+    border:1px solid var(--panel-brd);border-radius:16px;padding:16px 20px;margin:22px 0 30px;max-width:640px;width:100%;}
+  .legend-item{display:flex;align-items:baseline;gap:8px;font-size:.85rem;line-height:1.35;color:var(--ink-soft);}
+  .legend-num{font-family:'IBM Plex Mono',monospace;font-weight:700;font-size:.85rem;flex-shrink:0;}
+  .legend-item:nth-child(1) .legend-num{color:var(--m1);} .legend-item:nth-child(2) .legend-num{color:var(--m2);}
+  .legend-item:nth-child(3) .legend-num{color:var(--m3);} .legend-item:nth-child(4) .legend-num{color:var(--m4);}
+
+  .stage{z-index:1;display:flex;flex-direction:column;align-items:center;width:100%;position:relative;}
+  .scene{perspective:1600px;width:100%;max-width:520px;height:400px;}
+  .card{position:relative;width:100%;height:100%;transform-style:preserve-3d;transition:transform .55s cubic-bezier(.4,.2,.2,1);}
+  .card.flipped{transform:rotateY(180deg);}
+  .face{position:absolute;inset:0;backface-visibility:hidden;border-radius:24px;display:flex;flex-direction:column;
+    align-items:center;justify-content:center;padding:26px 26px;text-align:center;}
+  .face.front{background:rgba(255,255,255,.06);border:1px solid var(--panel-brd);backdrop-filter:blur(12px);
+    box-shadow:0 20px 50px rgba(4,10,24,.4);}
+  .eyebrow{font-family:'IBM Plex Mono',monospace;font-size:.68rem;letter-spacing:.14em;text-transform:uppercase;color:var(--cyan);font-weight:600;margin-bottom:14px;}
+  .func{font-size:1.5rem;font-weight:600;color:var(--ink);}
+  .func .katex{font-size:1.1em;}
+
+  .timer-bar{width:100%;max-width:260px;height:5px;background:rgba(255,255,255,.08);border-radius:99px;margin-top:16px;overflow:hidden;}
+  .timer-fill{height:100%;background:linear-gradient(90deg,var(--cyan),var(--cyan-deep));width:100%;}
+
+  .choice-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-top:20px;width:100%;max-width:320px;}
+  .choice-btn{font-family:inherit;font-weight:600;font-size:.8rem;border:1px solid var(--panel-brd);
+    background:rgba(255,255,255,.06);color:var(--ink-soft);border-radius:14px;padding:11px 6px;cursor:pointer;transition:all .15s ease;line-height:1.25;}
+  .choice-btn:hover:not(.disabled){background:rgba(255,255,255,.12);color:var(--ink);border-color:rgba(255,255,255,.2);}
+  .choice-btn.correct{background:linear-gradient(135deg,var(--ok),#10B981);border-color:transparent;color:#03211A;}
+  .choice-btn.wrong{background:linear-gradient(135deg,var(--bad),#E11D48);border-color:transparent;color:#2B0710;}
+  .choice-btn.disabled{opacity:.5;cursor:default;pointer-events:none;}
+  .peek-link{margin-top:16px;font-size:.75rem;color:var(--ink-mute);text-decoration:underline;cursor:pointer;background:none;border:none;font-family:inherit;}
+
+  .face.back{background:linear-gradient(160deg,#182036,#0F1424);border:1px solid var(--panel-brd);color:var(--ink);transform:rotateY(180deg);overflow-y:auto;padding:24px 22px;
+    box-shadow:0 20px 50px rgba(4,10,24,.4);}
+  .feedback-line{font-weight:700;font-size:.85rem;margin-bottom:12px;}
+  .feedback-line.ok{color:var(--ok);} .feedback-line.bad{color:var(--bad);}
+  .method-tag{font-weight:700;font-size:.95rem;margin-bottom:10px;padding:7px 18px;border-radius:99px;color:#fff;}
+  .chosen-note{font-size:.75rem;color:var(--ink-mute);margin-bottom:10px;}
+  .back .reason{font-size:.88rem;line-height:1.55;max-width:360px;color:var(--ink-soft);}
+
+  .back-actions{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-top:16px;}
+  .mini-btn{font-family:inherit;font-weight:600;font-size:.72rem;background:rgba(255,255,255,.08);
+    color:var(--ink);border:1px solid var(--panel-brd);border-radius:99px;padding:8px 14px;cursor:pointer;transition:background .15s ease;}
+  .mini-btn:hover{background:rgba(255,255,255,.16);}
+
+  .graph-box{display:none;margin-top:16px;background:rgba(255,255,255,.05);border-radius:14px;padding:10px;width:100%;max-width:300px;}
+  .steps-box{display:none;margin-top:16px;text-align:left;max-width:400px;color:var(--ink-soft);}
+  .step-row{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:8px;flex-wrap:wrap;}
+  .step-math{color:var(--ink);}
+  .step-math .katex{color:var(--ink);font-size:1em;}
+  .step-note{font-family:'IBM Plex Mono',monospace;font-size:.66rem;color:var(--cyan);white-space:nowrap;}
+  .step-plain{font-size:.78rem;color:var(--ink-mute);font-style:italic;margin-bottom:8px;}
+
+  .controls{z-index:1;display:flex;align-items:center;gap:12px;margin-top:26px;flex-wrap:wrap;justify-content:center;}
+  button{font-family:inherit;font-weight:600;font-size:.88rem;border:none;border-radius:99px;padding:12px 22px;
+    cursor:pointer;transition:transform .15s ease, background .15s ease;}
+  button:active{transform:scale(.96);}
+  .btn-nav{background:rgba(255,255,255,.08);color:var(--ink);border:1px solid var(--panel-brd);}
+  .btn-nav:hover{background:rgba(255,255,255,.14);}
+  .btn-shuffle{background:linear-gradient(135deg,var(--cyan),var(--cyan-deep));color:var(--cyan-ink);font-weight:700;
+    box-shadow:0 10px 24px rgba(34,211,238,.28);}
+  .btn-shuffle:hover{filter:brightness(1.08);}
+
+  .segbar{z-index:1;display:flex;gap:4px;width:100%;max-width:480px;margin-bottom:14px;}
+  .seg{flex:1;height:6px;border-radius:99px;background:rgba(255,255,255,.10);transition:background .2s ease;}
+  .seg.correct{background:var(--ok);} .seg.wrong{background:var(--bad);}
+  .seg.current{background:linear-gradient(90deg,var(--cyan),var(--cyan-deep));}
+  .segbar-label{z-index:1;font-family:'IBM Plex Mono',monospace;font-size:.75rem;letter-spacing:.05em;color:var(--ink-mute);margin-bottom:10px;text-align:center;width:100%;max-width:480px;}
+
+  .summary{position:absolute;inset:0;z-index:5;background:rgba(10,15,28,.92);backdrop-filter:blur(8px);border-radius:24px;display:none;
+    flex-direction:column;align-items:center;justify-content:center;color:var(--ink);padding:30px;text-align:center;}
+  .summary.show{display:flex;}
+  .summary h2{font-size:1.4rem;font-weight:700;margin:0 0 6px;}
+  .summary .stat-row{display:flex;gap:22px;margin:16px 0 22px;}
+  .summary .stat{font-size:1.7rem;font-weight:800;}
+  .summary .stat span{display:block;font-size:.72rem;font-weight:500;color:var(--ink-mute);margin-top:2px;}
+  .summary .stat.ok-c{color:var(--ok);} .summary .stat.bad-c{color:var(--bad);}
+  .summary-actions{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;}
+
+  footer{z-index:1;margin-top:36px;font-family:'IBM Plex Mono',monospace;font-size:.72rem;letter-spacing:.03em;color:var(--ink-mute);text-align:center;}
+
+  .print-only{display:none;}
+  @media print{
+    body{min-height:0 !important;height:auto !important;padding:0 !important;margin:0 !important;display:block !important;background:#fff !important;color:#000 !important;}
+    body > *:not(.print-only){display:none !important;}
+    .print-only{display:block !important;}
+    .print-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+    .print-card{border:1px solid #999;border-radius:6px;padding:10px 12px;break-inside:avoid;font-size:11px;font-family:'Plus Jakarta Sans',sans-serif;color:#000;}
+    .print-card .pf{font-size:13px;margin-bottom:6px;}
+    .print-card hr{border:none;border-top:1px dashed #999;margin:6px 0;}
+    .print-card .pm{font-weight:700;margin-bottom:3px;}
+  }
+
+  @media (max-width:480px){ .scene{height:470px;} .func{font-size:1.2rem;} .legend{grid-template-columns:1fr;} }
+  @media (prefers-reduced-motion: reduce){ .card{transition:none;} button{transition:none;} }
 </style>
 </head>
-<body class="bg-slate-50 text-slate-900">
+<body>
 
-<!-- HEADER / STEUERUNG -->
-<div class="no-print border-b border-slate-200 bg-white sticky top-0 z-10">
-  <div class="max-w-5xl mx-auto px-6 py-5">
-    <div class="flex items-center justify-between mb-5">
-      <div>
-        <h1 class="ui-font text-xl font-semibold text-slate-900">Nullstellen-Generator</h1>
-        <p class="ui-font text-sm text-slate-500">Quadratische Gleichungen — automatisch erzeugt, ganzzahlig lösbar</p>
-      </div>
-      <div class="flex gap-2">
-        <button id="btnGenerate" class="ui-font bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium px-4 py-2 rounded-md transition">Aufgaben generieren</button>
-        <button id="btnPrint" class="ui-font bg-white hover:bg-slate-100 text-slate-700 text-sm font-medium px-4 py-2 rounded-md border border-slate-300 transition">Druckansicht</button>
-      </div>
-    </div>
+<header>
+  <div class="logo-row">
+    <span class="school-name">campus vest · <b>herwig blankertz berufskolleg</b></span>
+  </div>
+  <h1>Nullstellen quadratischer Funktionen</h1>
+  <p class="subtitle">Wählen Sie für jede Funktionsgleichung die passende Methode zur Nullstellenberechnung.</p>
+</header>
 
-    <div class="flex flex-wrap items-end gap-8 ui-font">
-      <div>
-        <label class="block text-xs font-medium text-slate-500 mb-1">Anzahl der Aufgaben</label>
-        <select id="taskCount" class="border border-slate-300 rounded-md px-3 py-1.5 text-sm">
-          <option value="5">5</option>
-          <option value="10" selected>10</option>
-          <option value="15">15</option>
-        </select>
-      </div>
+<div class="toolbar">
+  <label><input type="checkbox" id="timerToggle" checked> Timer (15 Sek. pro Karte)</label>
+  <button class="btn-ghost" id="newSetBtn">🔄 16 neue Aufgaben</button>
+  <button class="btn-ghost" id="printBtn">🖨 Druckversion</button>
+</div>
 
-      <div>
-        <label class="block text-xs font-medium text-slate-500 mb-2">Lösungsverfahren-Fokus</label>
-        <div class="flex flex-wrap gap-4 text-sm text-slate-700">
-          <label class="flex items-center gap-1.5"><input type="checkbox" class="focusType" value="pq" checked> pq-Formel (a = 1)</label>
-          <label class="flex items-center gap-1.5"><input type="checkbox" class="focusType" value="ausklammern" checked> Ausklammern (c = 0)</label>
-          <label class="flex items-center gap-1.5"><input type="checkbox" class="focusType" value="wurzel" checked> Wurzelziehen (b = 0)</label>
-          <label class="flex items-center gap-1.5"><input type="checkbox" class="focusType" value="allgemein"> Allgemein (a ≠ 1)</label>
+<div class="legend" id="legend"></div>
+
+<div class="segbar-label" id="progressText">Karte 1/16</div>
+<div class="segbar" id="segbar"></div>
+
+<div class="stage">
+  <div class="scene">
+    <div class="card" id="card">
+      <div class="face front">
+        <span class="eyebrow">Funktionsgleichung</span>
+        <span class="func" id="funcText"></span>
+        <div class="timer-bar" id="timerBar" style="display:none;"><div class="timer-fill" id="timerFill"></div></div>
+        <div class="choice-grid" id="choiceGrid"></div>
+        <button class="peek-link" id="peekBtn">Lösung anzeigen (ohne Wertung)</button>
+      </div>
+      <div class="face back">
+        <div class="feedback-line" id="feedbackLine"></div>
+        <span class="method-tag" id="methodTag"></span>
+        <div class="chosen-note" id="chosenNote"></div>
+        <span class="reason" id="reasonText"></span>
+        <div class="back-actions">
+          <button class="mini-btn" id="graphBtn">📈 Graph anzeigen</button>
+          <button class="mini-btn" id="stepsBtn">🧮 Ausführlicher Lösungsweg</button>
         </div>
+        <div class="graph-box" id="graphBox"></div>
+        <div class="steps-box" id="stepsBox"></div>
+      </div>
+    </div>
+
+    <div class="summary" id="summary">
+      <h2>Runde abgeschlossen</h2>
+      <div class="stat-row">
+        <div class="stat ok-c" id="statCorrect">0<span>richtig</span></div>
+        <div class="stat bad-c" id="statWrong">0<span>nochmal</span></div>
+        <div class="stat" id="statSkipped">0<span>übersprungen</span></div>
+      </div>
+      <div class="summary-actions">
+        <button class="btn-nav" id="repeatWrongBtn">Nur "Nochmal"-Karten wiederholen</button>
+        <button class="btn-shuffle" id="restartBtn">Alle neu starten</button>
       </div>
     </div>
   </div>
+
+  <div class="controls">
+    <button class="btn-nav" id="prevBtn">← Zurück</button>
+    <button class="btn-shuffle" id="shuffleBtn">⟲ Mischen</button>
+    <button class="btn-nav" id="nextBtn">Weiter →</button>
+  </div>
 </div>
 
-<!-- AUSGABE -->
-<div class="max-w-5xl mx-auto px-6 py-10">
+<footer>Herwig-Blankertz-Berufskolleg · FOS Mathematik · Leertaste: Vorschau · Pfeiltasten: Blättern · 1–4: Antwort wählen</footer>
 
-  <div id="taskSection">
-    <h2 class="text-2xl font-semibold mb-1">Nullstellen berechnen</h2>
-    <p class="text-sm text-slate-500 mb-6 ui-font">Bestimmen Sie jeweils die Nullstellen der folgenden quadratischen Gleichungen.</p>
-    <ol id="taskList" class="space-y-4 list-decimal list-inside"></ol>
-  </div>
-
-  <div id="solutionSection" class="print-page-break mt-16">
-    <div class="border-t-2 border-slate-800 pt-6 mb-6">
-      <h2 class="text-2xl font-semibold mb-1">Erwartungshorizont</h2>
-      <p class="text-sm text-slate-500 ui-font">Vollständiger Lösungsweg für die Lehrkraft.</p>
-    </div>
-    <ol id="solutionList" class="space-y-8 list-decimal list-inside"></ol>
-  </div>
-
-</div>
+<div class="print-only" id="printArea"></div>
 
 <script>
-function randInt(min, max) {
-  return Math.floor(Math.random() * (max - min + 1)) + min;
+/* ---------- Helfer ---------- */
+function randInt(min,max){ return Math.floor(Math.random()*(max-min+1))+min; }
+function randNonZero(min,max){ let n=0; while(n===0) n=randInt(min,max); return n; }
+function randChoice(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
+function round2(x){ const r = Math.round(x*100)/100; return Object.is(r,-0)?0:r; }
+function fmtNum(x){
+  x = round2(x);
+  if(Number.isInteger(x)) return `${x}`;
+  return x.toFixed(2).replace(/0+$/,'').replace(/\.$/,'').replace('.', ',');
+}
+function tex(str){ try{ return katex.renderToString(str, {throwOnError:false}); } catch(e){ return str; } }
+function fracTex(v){
+  const m = Math.abs(v);
+  if(Math.abs(m-0.25)<1e-9) return '\\dfrac{1}{4}';
+  if(Math.abs(m-0.5)<1e-9)  return '\\dfrac{1}{2}';
+  if(Math.abs(m-0.75)<1e-9) return '\\dfrac{3}{4}';
+  return fmtNum(m);
+}
+function leadTex(a){ if(a===1) return ''; if(a===-1) return '-'; return a<0 ? `-${Math.abs(a)}` : `${a}`; }
+function termTex(value, symbol){
+  if(value===0) return '';
+  const sign = value<0 ? '-':'+';
+  const mag = Math.abs(value);
+  const magStr = (symbol==='x' && Math.abs(mag-1)<1e-9) ? '' : fracTex(mag);
+  return ` ${sign} ${magStr}${symbol}`;
+}
+function fracPlain(v){
+  const m = Math.abs(v);
+  if(Math.abs(m-0.25)<1e-9) return '1/4';
+  if(Math.abs(m-0.5)<1e-9)  return '1/2';
+  if(Math.abs(m-0.75)<1e-9) return '3/4';
+  return fmtNum(m);
+}
+function factorTex(r){ return r>0 ? `x-${fmtNum(r)}` : `x+${fmtNum(-r)}`; }
+function sqTermTex(h){ return h===0 ? 'x' : (h>0 ? `(x-${fmtNum(h)})` : `(x+${fmtNum(-h)})`); }
+
+/* ---------- Methoden-Generatoren ---------- */
+const methodMeta = {
+  1:{name:"Methode 1 · Umformen &amp; Wurzel ziehen", color:"#0891B2", short:"1 · Umformen/Wurzel"},
+  2:{name:"Methode 2 · Ausklammern &amp; Nullprodukt", color:"#6366F1", short:"2 · Ausklammern"},
+  3:{name:"Methode 3 · Produktform (ablesen)", color:"#B45309", short:"3 · Produktform - NST ablesen"},
+  4:{name:"Methode 4 · pq-Formel", color:"#DB2777", short:"4 · pq-Formel"}
+};
+const legendData = [
+  {n:1,t:"Einfaches Umformen und Wurzel ziehen"},
+  {n:2,t:"Ausklammern und Satz vom Nullprodukt"},
+  {n:3,t:"Liegt in Produktform vor – Nullstellen ablesen"},
+  {n:4,t:"pq-Formel"}
+];
+
+function finalizeMethod1(a,h,e,k){
+  const tx = `${leadTex(a)}${sqTermTex(h)}^2 - ${fracTex(e)}`;
+  return { f:tx, m:1,
+    r: h===0 ? `Kein x-Term (b = 0). Nach x² umstellen und Wurzel ziehen.`
+             : `Bereits in der Scheitelpunktform gegeben. Nach dem quadrierten Term in der Klammer umstellen und Wurzel ziehen.`,
+    extra:{a,h,e}, roots:[round2(h-k), round2(h+k)] };
+}
+function genMethod1(useFraction){
+  const a = randChoice([1,1,1,2,3]);
+  if(useFraction){ const h = randNonZero(-6,6); return finalizeMethod1(a,h,0.25,0.5); }
+  if(Math.random()<0.5){ const k=randInt(1,6); return finalizeMethod1(a,0,a*k*k,k); }
+  const h = randNonZero(-6,6); const k = randInt(1,5);
+  return finalizeMethod1(a,h,a*k*k,k);
 }
 
-function fmtNum(n) {
-  if (Number.isInteger(n)) return n.toString();
-  return n.toFixed(2).replace(/\.?0+$/, '');
+function finalizeMethod2(a,b){
+  const tx = `${leadTex(a)}x^2${termTex(b,'x')}`;
+  return { f:tx, m:2, r:`Kein konstantes Glied (c = 0). x ausklammern, dann Satz vom Nullprodukt anwenden.`,
+    extra:{a,b}, roots:[0, round2(-b/a)] };
+}
+function genMethod2(){ const a=randChoice([1,1,1,2,3,-1]); const m2=randNonZero(-9,9); return finalizeMethod2(a,a*m2); }
+
+function finalizeMethod3(a,r1,r2){
+  const tx = `${leadTex(a)}(${factorTex(r1)})(${factorTex(r2)})`;
+  return { f:tx, m:3, r:`Bereits in Produktform gegeben. Nullstellen können leicht abgelesen werden.`,
+    extra:{a,r1,r2}, roots:[r1,r2] };
+}
+function genMethod3(){
+  const a = randChoice([1,1,1,2,-1]);
+  let r1 = randNonZero(-6,6); let r2 = randNonZero(-6,6);
+  while(r2===r1) r2 = randNonZero(-6,6);
+  return finalizeMethod3(a,r1,r2);
 }
 
-// Formatiert einen Term-Teil "+ 3x" / "- 3x" etc. Gibt "" zurück wenn coeff 0.
-function termStr(coeff, variable, isFirst) {
-  if (coeff === 0) return '';
-  const abs = Math.abs(coeff);
-  const coeffStr = (abs === 1 && variable !== '') ? '' : fmtNum(abs);
-  const sign = coeff < 0 ? '-' : '+';
-  const body = coeffStr + variable;
-  if (isFirst) {
-    return (coeff < 0 ? '-' : '') + (coeffStr === '' ? variable : coeffStr + variable);
+function finalizeMethod4(a,b,c,roots){
+  const p = round2(b/a), q = round2(c/a);
+  const tx = `${leadTex(a)}x^2${termTex(b,'x')}${termTex(c,'')}`;
+  const r = a===1
+    ? `Vollständige Gleichung ohne erkennbare Faktorzerlegung. pq-Formel anwenden (p = ${fmtNum(p)}, q = ${fmtNum(q)}).`
+    : `Vollständige Gleichung mit führendem Koeffizienten a ≠ 1. Erst durch ${a} dividieren (normieren), anschließend pq-Formel anwenden (p = ${fmtNum(p)}, q = ${fmtNum(q)}).`;
+  return { f:tx, m:4, r, extra:{a,b,c}, roots: roots.map(round2) };
+}
+function genMethod4(useFraction){
+  if(useFraction){
+    const table = [
+      {p:-2,q:0.75,roots:[0.5,1.5]}, {p:1,q:-0.75,roots:[0.5,-1.5]},
+      {p:-1,q:-0.75,roots:[-0.5,1.5]}, {p:2,q:0.75,roots:[-0.5,-1.5]}
+    ];
+    const t = randChoice(table);
+    return finalizeMethod4(1, t.p, t.q, t.roots);
   }
-  return ' ' + sign + ' ' + body;
+  let r1 = randNonZero(-8,8); let r2 = randNonZero(-8,8);
+  while(r2===r1) r2 = randNonZero(-8,8);
+  const p = -(r1+r2), q = r1*r2;
+  const a = randChoice([1,1,2,3]);
+  return finalizeMethod4(a, a*p, a*q, [r1,r2]);
 }
 
-function buildEquation(a, b, c) {
-  let s = '';
-  s += termStr(a, 'x²', true);
-  s += termStr(b, 'x', s === '');
-  s += termStr(c, '', s === '');
-  if (s === '') s = '0';
-  return s + ' = 0';
+/* ---------- Statischer Grundsatz (kuratiert) ---------- */
+function buildStaticCards(){
+  return [
+    finalizeMethod1(1,0,9,3),
+    finalizeMethod3(1,3,-2),
+    finalizeMethod2(1,-5),
+    finalizeMethod4(1,-6,5,[1,5]),
+    finalizeMethod3(1,1,5),
+    finalizeMethod1(2,0,8,2),
+    finalizeMethod4(1,4,-12,[-6,2]),
+    finalizeMethod2(2,6),
+    finalizeMethod1(3,1,12,2),
+    finalizeMethod3(2,-4,2),
+    finalizeMethod4(2,-4,-16,[4,-2]),
+    finalizeMethod2(-1,4),
+    finalizeMethod1(1,-2,0.25,0.5),
+    finalizeMethod3(-1,6,-1),
+    finalizeMethod4(1,1,-0.75,[0.5,-1.5]),
+    finalizeMethod2(3,-6)
+  ];
+}
+function generateRandomSet(){
+  const fr1 = randInt(0,3), fr4 = randInt(0,3);
+  const all = [
+    ...[0,1,2,3].map(i=>genMethod1(i===fr1)),
+    ...[0,1,2,3].map(()=>genMethod2()),
+    ...[0,1,2,3].map(()=>genMethod3()),
+    ...[0,1,2,3].map(i=>genMethod4(i===fr4))
+  ];
+  for(let i=all.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [all[i],all[j]]=[all[j],all[i]]; }
+  return all;
 }
 
-// Generiert eine Aufgabe für den gewählten Typ
-function generateTask(type) {
-  let x1, x2, a;
+const cards = buildStaticCards();
+cards.forEach(c=>{ c.status=null; c.chosen=null; });
 
-  if (type === 'ausklammern') {
-    x1 = 0;
-    do { x2 = randInt(-10, 10); } while (x2 === 0);
-  } else if (type === 'wurzel') {
-    do { x2 = randInt(-10, 10); } while (x2 === 0);
-    x1 = -x2;
+/* ---------- Standardform & Graph ---------- */
+function stdCoeffs(card){
+  const ex = card.extra;
+  if(card.m===1) return {a:ex.a, b:-2*ex.a*ex.h, c:ex.a*ex.h*ex.h - ex.e};
+  if(card.m===2) return {a:ex.a, b:ex.b, c:0};
+  if(card.m===3) return {a:ex.a, b:-ex.a*(ex.r1+ex.r2), c:ex.a*ex.r1*ex.r2};
+  return {a:ex.a, b:ex.b, c:ex.c};
+}
+function buildGraphSVG(card){
+  const {a,b,c} = stdCoeffs(card);
+  const roots = card.roots;
+  const vertexX = -b/(2*a);
+  const allX = [...roots, vertexX];
+  let xMin = Math.min(...allX) - 2, xMax = Math.max(...allX) + 2;
+  const steps = 50, pts = [];
+  for(let i=0;i<=steps;i++){ const x = xMin + (xMax-xMin)*i/steps; pts.push([x, a*x*x+b*x+c]); }
+  const ys = pts.map(p=>p[1]);
+  let yMin = Math.min(...ys,0), yMax = Math.max(...ys,0);
+  const yPad = (yMax-yMin)*0.15 || 1; yMin -= yPad; yMax += yPad;
+  const W=280,H=170,ML=26,MR=12,MT=12,MB=22, plotW=W-ML-MR, plotH=H-MT-MB;
+  const sx = x => ML + (x-xMin)/(xMax-xMin)*plotW;
+  const sy = y => MT + (1-(y-yMin)/(yMax-yMin))*plotH;
+  const pathD = pts.map((p,i)=>`${i===0?'M':'L'} ${sx(p[0]).toFixed(1)},${sy(p[1]).toFixed(1)}`).join(' ');
+  let axes = '';
+  if(yMin<0 && yMax>0) axes += `<line x1="${ML}" y1="${sy(0).toFixed(1)}" x2="${W-MR}" y2="${sy(0).toFixed(1)}" stroke="rgba(255,255,255,.3)" stroke-width="1"/>`;
+  if(xMin<0 && xMax>0) axes += `<line x1="${sx(0).toFixed(1)}" y1="${MT}" x2="${sx(0).toFixed(1)}" y2="${H-MB}" stroke="rgba(255,255,255,.3)" stroke-width="1"/>`;
+  const markers = roots.map(r => `
+    <circle cx="${sx(r).toFixed(1)}" cy="${sy(0).toFixed(1)}" r="4" fill="#F2A9A0"/>
+    <text x="${sx(r).toFixed(1)}" y="${(sy(0)+15).toFixed(1)}" font-size="9" text-anchor="middle" fill="#ffffff" font-family="'IBM Plex Sans',sans-serif">${fmtNum(r)}</text>`).join('');
+  return `<svg viewBox="0 0 ${W} ${H}" width="100%" height="150">${axes}<path d="${pathD}" fill="none" stroke="#22D3EE" stroke-width="2"/>${markers}</svg>`;
+}
+
+/* ---------- Ausführlicher Lösungsweg (Formatierung wie Musterbeispiele) ---------- */
+function stepRow(mathTex, note){
+  return `<div class="step-row"><span class="step-math">${tex(mathTex)}</span>${note ? `<span class="step-note">| ${note}</span>` : ''}</div>`;
+}
+function stepPlain(text){ return `<div class="step-plain">${text}</div>`; }
+
+function buildStepsHTML(card){
+  const ex = card.extra;
+  let html = '';
+
+  if(card.m === 1){
+    const {a,h,e} = ex;
+    const k = Math.sqrt(e/a);
+    const sq = sqTermTex(h);
+    html += stepRow(`f(x) = ${leadTex(a)}${sq}^2 - ${fracTex(e)}`);
+    html += stepRow(`f(x) = 0`);
+    html += stepRow(`${leadTex(a)}${sq}^2 - ${fracTex(e)} = 0`, `+ ${fracPlain(e)}`);
+    if(a !== 1){
+      html += stepRow(`${leadTex(a)}${sq}^2 = ${fracTex(e)}`, `: ${a}`);
+      html += stepRow(`${sq}^2 = ${fracTex(round2(e/a))}`, `± √`);
+    } else {
+      html += stepRow(`${sq}^2 = ${fracTex(e)}`, `± √`);
+    }
+    html += stepRow(`${h===0?'x':'x '+(h>0?'-':'+')+' '+fmtNum(Math.abs(h))} = \\pm ${fracTex(k)}`);
+    html += stepRow(`x_1 = ${fmtNum(h-k)} \\quad \\text{oder} \\quad x_2 = ${fmtNum(h+k)}`);
+    return html;
+  }
+
+  if(card.m === 2){
+    const {a,b} = ex;
+    const aStr = leadTex(a);
+    html += stepRow(`f(x) = ${aStr}x^2${termTex(b,'x')}`);
+    html += stepRow(`f(x) = 0`);
+    html += stepRow(`${aStr}x^2${termTex(b,'x')} = 0`, `x-ausklammern`);
+    html += stepRow(`x(${aStr}x${termTex(b,'')}) = 0`, `Satz vom Nullprodukt`);
+    html += stepRow(`x_1 = 0`);
+    const counter = b>0 ? `- ${Math.abs(b)}` : `+ ${Math.abs(b)}`;
+    html += stepRow(`${aStr}x${termTex(b,'')} = 0`, counter);
+    if(a !== 1){
+      html += stepRow(`${aStr}x = ${fmtNum(-b)}`, `: ${a}`);
+      html += stepRow(`x_2 = ${fmtNum(-b/a)}`);
+    } else {
+      html += stepRow(`x_2 = ${fmtNum(-b)}`);
+    }
+    return html;
+  }
+
+  if(card.m === 3){
+    const {a,r1,r2} = ex;
+    html += stepRow(`f(x) = ${leadTex(a)}(${factorTex(r1)})(${factorTex(r2)})`);
+    html += stepRow(`f(x) = 0`);
+    html += stepRow(`${leadTex(a)}(${factorTex(r1)})(${factorTex(r2)}) = 0`, `Satz vom Nullprodukt`);
+    html += stepRow(`x_1 = ${fmtNum(r1)} \\quad \\text{oder} \\quad x_2 = ${fmtNum(r2)}`);
+    return html;
+  }
+
+  // Methode 4: pq-Formel (ggf. mit Normierung)
+  const {a,b,c} = ex;
+  const p = round2(b/a), q = round2(c/a);
+  const half = round2(p/2);
+  const disc = round2(half*half - q);
+  html += stepRow(`f(x) = ${leadTex(a)}x^2${termTex(b,'x')}${termTex(c,'')}`);
+  html += stepRow(`f(x) = 0`);
+  if(a !== 1){
+    html += stepRow(`${leadTex(a)}x^2${termTex(b,'x')}${termTex(c,'')} = 0`, `: ${a}`);
+    html += stepRow(`x^2${termTex(p,'x')}${termTex(q,'')} = 0`);
   } else {
-    do { x1 = randInt(-10, 10); x2 = randInt(-10, 10); } while (x1 === x2);
+    html += stepRow(`x^2${termTex(p,'x')}${termTex(q,'')} = 0`);
   }
+  html += stepRow(`p = ${fmtNum(p)} \\; ; \\; q = ${fmtNum(q)}`);
+  html += stepRow(`x_{1,2} = -\\dfrac{p}{2} \\pm \\sqrt{\\left(\\dfrac{p}{2}\\right)^2 - q}`);
+  html += stepRow(`= -\\dfrac{${fmtNum(p)}}{2} \\pm \\sqrt{\\left(\\dfrac{${fmtNum(p)}}{2}\\right)^2 - (${fmtNum(q)})}`);
+  html += stepRow(`= ${fmtNum(-half)} \\pm \\sqrt{(${fmtNum(half)})^2 - (${fmtNum(q)})}`);
+  html += stepRow(`= ${fmtNum(-half)} \\pm \\sqrt{${fmtNum(round2(half*half))} - (${fmtNum(q)})}`);
+  html += stepRow(`= ${fmtNum(-half)} \\pm \\sqrt{${fmtNum(disc)}}`);
 
-  if (type === 'pq' || type === 'ausklammern' || type === 'wurzel') {
-    a = 1;
+  if(disc > 0){
+    const sq = Math.sqrt(disc);
+    html += stepRow(`= ${fmtNum(-half)} \\pm ${fmtNum(sq)}`);
+    html += stepRow(`x_1 = ${fmtNum(-half - sq)} \\quad \\text{oder} \\quad x_2 = ${fmtNum(-half + sq)}`);
+  } else if(disc === 0){
+    html += stepRow(`x = ${fmtNum(-half)}`);
+    html += stepPlain('„nur eine Nullstelle" – doppelte Nullstelle');
   } else {
-    const pool = [2, -2, 3, -3, 0.5, -0.5];
-    a = pool[randInt(0, pool.length - 1)];
+    html += stepPlain('„keine Nullstellen" – Diskriminante negativ');
   }
-
-  const b = -a * (x1 + x2);
-  const c = a * x1 * x2;
-
-  return { type, a, b, c, x1, x2 };
+  return html;
 }
 
-function typeLabel(type) {
-  return { pq: 'pq-Formel', ausklammern: 'Ausklammern', wurzel: 'Wurzelziehen', allgemein: 'Allgemein' }[type];
+/* ---------- Zustand & Rendering ---------- */
+let order = cards.map((_,i)=>i);
+let pos = 0;
+let timerEnabled = true;
+let timerInterval = null;
+const TIMER_MS = 15000;
+
+const cardEl=document.getElementById('card'), funcText=document.getElementById('funcText'),
+  methodTag=document.getElementById('methodTag'), reasonText=document.getElementById('reasonText'),
+  feedbackLine=document.getElementById('feedbackLine'), chosenNote=document.getElementById('chosenNote'),
+  progressText=document.getElementById('progressText'), legendEl=document.getElementById('legend'),
+  choiceGrid=document.getElementById('choiceGrid'),
+  summaryEl=document.getElementById('summary'), timerBar=document.getElementById('timerBar'),
+  timerFill=document.getElementById('timerFill'), graphBox=document.getElementById('graphBox'),
+  stepsBox=document.getElementById('stepsBox'), segbarEl=document.getElementById('segbar');
+
+function renderLegend(){ legendEl.innerHTML = legendData.map(l=>`<div class="legend-item"><span class="legend-num">${l.n}</span><span>${l.t}</span></div>`).join(''); }
+function buildChoiceButtons(){
+  choiceGrid.innerHTML = Object.keys(methodMeta).map(k=>`<button class="choice-btn" data-m="${k}">${methodMeta[k].short}</button>`).join('');
+  choiceGrid.querySelectorAll('.choice-btn').forEach(btn=>btn.addEventListener('click', ()=>selectAnswer(Number(btn.dataset.m))));
 }
+function currentCard(){ return cards[order[pos]]; }
 
-function buildSolutionSteps(task) {
-  const { type, a, b, c, x1, x2 } = task;
-  const steps = [];
-
-  if (type === 'ausklammern') {
-    steps.push(`Gleichung: ${buildEquation(a, b, c)}`);
-    steps.push(`x ausklammern: x · (${buildEquation(a, b, 0).replace(' = 0', '').replace(/^x/, '').trim() ? termStr(a,'x',true).trim()+termStr(b,'',false).trim() : ''}) = 0`);
-    const innerA = a === 1 ? 'x' : fmtNum(a) + 'x';
-    const innerB = b === 0 ? '' : (b > 0 ? ' + ' + fmtNum(b) : ' - ' + fmtNum(Math.abs(b)));
-    steps[1] = `Ausklammern von x: x · (${innerA}${innerB}) = 0`;
-    steps.push(`Satz vom Nullprodukt: x = 0  oder  ${innerA}${innerB} = 0`);
-    steps.push(`Zweite Gleichung lösen: x = ${fmtNum(x2)}`);
-    steps.push(`Lösungen: x₁ = ${fmtNum(x1)}   x₂ = ${fmtNum(x2)}`);
-  } else if (type === 'wurzel') {
-    steps.push(`Gleichung: ${buildEquation(a, b, c)}`);
-    steps.push(`Nach x² umstellen: x² = ${fmtNum(-c / a)}`);
-    steps.push(`Wurzelziehen (beide Vorzeichen): x = ±√${fmtNum(-c / a)}`);
-    steps.push(`Lösungen: x₁ = ${fmtNum(x1)}   x₂ = ${fmtNum(x2)}`);
-  } else if (type === 'pq') {
-    const p = b, q = c;
-    const disc = (p / 2) * (p / 2) - q;
-    steps.push(`Gleichung (bereits in Normalform): ${buildEquation(1, p, q)}`);
-    steps.push(`p = ${fmtNum(p)},  q = ${fmtNum(q)}`);
-    steps.push(`pq-Formel: x₁,₂ = −p/2 ± √((p/2)² − q)`);
-    steps.push(`Diskriminante: (p/2)² − q = ${fmtNum(disc)}`);
-    steps.push(`x₁,₂ = ${fmtNum(-p/2)} ± √${fmtNum(disc)} = ${fmtNum(-p/2)} ± ${fmtNum(Math.sqrt(disc))}`);
-    steps.push(`Lösungen: x₁ = ${fmtNum(x1)}   x₂ = ${fmtNum(x2)}`);
-  } else {
-    // allgemein
-    steps.push(`Gleichung: ${buildEquation(a, b, c)}`);
-    steps.push(`Durch a = ${fmtNum(a)} teilen (Normalform herstellen): ${buildEquation(1, b/a, c/a)}`);
-    const p = b / a, q = c / a;
-    const disc = (p / 2) * (p / 2) - q;
-    steps.push(`p = ${fmtNum(p)},  q = ${fmtNum(q)}`);
-    steps.push(`pq-Formel: x₁,₂ = −p/2 ± √((p/2)² − q)`);
-    steps.push(`Diskriminante: (p/2)² − q = ${fmtNum(disc)}`);
-    steps.push(`x₁,₂ = ${fmtNum(-p/2)} ± √${fmtNum(disc)} = ${fmtNum(-p/2)} ± ${fmtNum(Math.sqrt(disc))}`);
-    steps.push(`Lösungen: x₁ = ${fmtNum(x1)}   x₂ = ${fmtNum(x2)}`);
-  }
-
-  return steps;
-}
-
-function generate() {
-  const count = parseInt(document.getElementById('taskCount').value, 10);
-  const selectedTypes = Array.from(document.querySelectorAll('.focusType:checked')).map(cb => cb.value);
-
-  const types = selectedTypes.length > 0 ? selectedTypes : ['pq'];
-
-  const tasks = [];
-  for (let i = 0; i < count; i++) {
-    const type = types[randInt(0, types.length - 1)];
-    tasks.push(generateTask(type));
-  }
-
-  const taskList = document.getElementById('taskList');
-  const solutionList = document.getElementById('solutionList');
-  taskList.innerHTML = '';
-  solutionList.innerHTML = '';
-
-  tasks.forEach((t, idx) => {
-    const eq = buildEquation(t.a, t.b, t.c);
-
-    const li = document.createElement('li');
-    li.className = 'task-card text-lg pl-2';
-    li.innerHTML = `<span class="text-xl">${eq}</span>`;
-    taskList.appendChild(li);
-
-    const steps = buildSolutionSteps(t);
-    const sol = document.createElement('li');
-    sol.className = 'task-card pl-2';
-    sol.innerHTML = `
-      <div class="text-lg font-medium mb-2">${eq}
-        <span class="ui-font text-xs text-slate-400 font-normal ml-2">(${typeLabel(t.type)})</span>
-      </div>
-      <ul class="ui-font text-sm text-slate-700 space-y-1 pl-4 border-l-2 border-blue-100">
-        ${steps.map(s => `<li>${s}</li>`).join('')}
-      </ul>`;
-    solutionList.appendChild(sol);
+function updateChoiceUI(){
+  const c = currentCard();
+  choiceGrid.querySelectorAll('.choice-btn').forEach(btn=>{
+    const val = Number(btn.dataset.m);
+    btn.classList.remove('correct','wrong','disabled');
+    if(c.status){ btn.classList.add('disabled'); if(val===c.m) btn.classList.add('correct'); else if(val===c.chosen) btn.classList.add('wrong'); }
   });
 }
 
-document.getElementById('btnGenerate').addEventListener('click', generate);
-document.getElementById('btnPrint').addEventListener('click', () => window.print());
+function renderCard(){
+  clearTimer();
+  const c = currentCard();
+  funcText.innerHTML = `f(x) = ${tex(c.f)}`;
+  const meta = methodMeta[c.m];
+  methodTag.innerHTML = meta.name; methodTag.style.background = meta.color;
+  reasonText.textContent = c.r;
 
-generate();
+  if(c.status==='correct'){ feedbackLine.textContent='✓ Richtig gewählt'; feedbackLine.className='feedback-line ok'; chosenNote.textContent=''; }
+  else if(c.status==='wrong'){ feedbackLine.textContent='✗ Nicht korrekt'; feedbackLine.className='feedback-line bad';
+    chosenNote.textContent = c.chosen ? `Ihre Wahl: ${methodMeta[c.chosen].short}` : 'Keine Antwort (Zeit abgelaufen)'; }
+  else { feedbackLine.textContent=''; chosenNote.textContent=''; }
+
+  updateChoiceUI();
+  cardEl.classList.toggle('flipped', !!c.status);
+
+  graphBox.style.display='none'; graphBox.innerHTML='';
+  stepsBox.style.display='none'; stepsBox.innerHTML='';
+
+  timerBar.style.display = timerEnabled && !c.status ? 'block' : 'none';
+  if(timerEnabled && !c.status) startTimer();
+
+  progressText.textContent = `Karte ${pos+1}/${cards.length}`;
+  renderSegbar();
+}
+
+function renderSegbar(){
+  segbarEl.innerHTML = order.map((idx,i)=>{
+    const c = cards[idx]; let cls='seg';
+    if(c.status==='correct') cls+=' correct'; else if(c.status==='wrong') cls+=' wrong';
+    if(i===pos) cls+=' current';
+    return `<span class="${cls}"></span>`;
+  }).join('');
+}
+
+function selectAnswer(m){
+  const c = currentCard();
+  if(c.status) return;
+  clearTimer();
+  c.chosen = m; c.status = (m===c.m) ? 'correct' : 'wrong';
+  updateChoiceUI(); renderCard();
+}
+
+document.getElementById('peekBtn').addEventListener('click', (e)=>{ e.stopPropagation(); cardEl.classList.toggle('flipped'); });
+document.getElementById('graphBtn').addEventListener('click', ()=>{
+  if(graphBox.style.display==='none'||!graphBox.innerHTML){ graphBox.innerHTML = buildGraphSVG(currentCard()); graphBox.style.display='block'; }
+  else graphBox.style.display='none';
+});
+document.getElementById('stepsBtn').addEventListener('click', ()=>{
+  if(stepsBox.style.display==='none'||!stepsBox.innerHTML){ stepsBox.innerHTML = buildStepsHTML(currentCard()); stepsBox.style.display='block'; }
+  else stepsBox.style.display='none';
+});
+
+function startTimer(){
+  timerFill.style.width='100%'; const start=Date.now();
+  timerInterval = setInterval(()=>{
+    const elapsed = Date.now()-start; const pct = Math.max(0,100-(elapsed/TIMER_MS*100));
+    timerFill.style.width = pct+'%';
+    if(elapsed>=TIMER_MS){ clearInterval(timerInterval); selectAnswer(null); }
+  },100);
+}
+function clearTimer(){ if(timerInterval){ clearInterval(timerInterval); timerInterval=null; } }
+
+document.getElementById('timerToggle').addEventListener('change', (e)=>{ timerEnabled=e.target.checked; renderCard(); });
+
+document.getElementById('nextBtn').addEventListener('click', ()=>{
+  if(pos < order.length-1){ pos++; renderCard(); } else { showSummary(); }
+});
+document.getElementById('prevBtn').addEventListener('click', ()=>{ if(pos>0){ pos--; renderCard(); } });
+document.getElementById('shuffleBtn').addEventListener('click', ()=>{
+  for(let i=order.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [order[i],order[j]]=[order[j],order[i]]; }
+  pos = 0; renderCard();
+});
+
+function showSummary(){
+  clearTimer();
+  const correct = cards.filter(c=>c.status==='correct').length;
+  const wrong = cards.filter(c=>c.status==='wrong').length;
+  const skipped = cards.length - correct - wrong;
+  document.getElementById('statCorrect').innerHTML = `${correct}<span>richtig</span>`;
+  document.getElementById('statWrong').innerHTML = `${wrong}<span>nochmal</span>`;
+  document.getElementById('statSkipped').innerHTML = `${skipped}<span>übersprungen</span>`;
+  document.getElementById('repeatWrongBtn').style.display = wrong>0 ? 'inline-block' : 'none';
+  summaryEl.classList.add('show');
+}
+document.getElementById('repeatWrongBtn').addEventListener('click', ()=>{
+  const wrongIdx = cards.map((c,i)=>({c,i})).filter(o=>o.c.status==='wrong').map(o=>o.i);
+  wrongIdx.forEach(i=>{ cards[i].status=null; cards[i].chosen=null; });
+  order = wrongIdx; pos = 0; summaryEl.classList.remove('show'); renderCard();
+});
+document.getElementById('restartBtn').addEventListener('click', ()=>{
+  cards.forEach(c=>{ c.status=null; c.chosen=null; });
+  order = cards.map((_,i)=>i);
+  for(let i=order.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [order[i],order[j]]=[order[j],order[i]]; }
+  pos = 0; summaryEl.classList.remove('show'); renderCard();
+});
+
+document.getElementById('newSetBtn').addEventListener('click', ()=>{
+  clearTimer();
+  const newCards = generateRandomSet();
+  cards.splice(0, cards.length, ...newCards);
+  order = cards.map((_,i)=>i); pos = 0;
+  summaryEl.classList.remove('show'); renderCard();
+});
+
+document.addEventListener('keydown', (e)=>{
+  if(summaryEl.classList.contains('show')) return;
+  if(['1','2','3','4'].includes(e.key)) selectAnswer(Number(e.key));
+  else if(e.key==='ArrowRight') document.getElementById('nextBtn').click();
+  else if(e.key==='ArrowLeft') document.getElementById('prevBtn').click();
+  else if(e.key===' '){ e.preventDefault(); cardEl.classList.toggle('flipped'); }
+});
+
+document.getElementById('printBtn').addEventListener('click', ()=>{
+  const area = document.getElementById('printArea');
+  area.innerHTML = `<h2>Nullstellen quadratischer Funktionen · Lernkarten</h2>
+    <div class="print-grid">${cards.map(c=>`
+      <div class="print-card"><div class="pf">f(x) = ${tex(c.f)}</div><hr>
+        <div class="pm">${methodMeta[c.m].name.replace('&amp;','&')}</div><div>${c.r}</div></div>`).join('')}</div>`;
+  window.print();
+});
+
+renderLegend(); buildChoiceButtons(); renderCard();
 </script>
+
 </body>
 </html>
